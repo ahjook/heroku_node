@@ -20,7 +20,7 @@
     "url": "https://github.com/ahjook/heroku_node/issues"
   },
   "homepage": "https://github.com/ahjook/heroku_node#readme",
-  "engines":{
+  "engines": {
     "node": "10.16"
   },
   "dependencies": {

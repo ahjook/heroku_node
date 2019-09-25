@@ -1,2 +1,233 @@
-<h1>Hello Ah Jook gwapa</h1>
-<h2>jjjjj</h2>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Chat_example</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<style>
+  body {
+   
+    background-image: url(https://cdn02.plentymarkets.com/2brofzsczyt8/item/images/154481/full/Disney-Fototapete-Feen-bunt-360x254-cm-FTD-2222-15.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+
+  }
+
+  #inputName {
+    width: 250px;
+    margin-bottom: 10px;
+    padding-top: 25%;
+  }
+
+  #username {
+    outline: none;
+    padding: 20px 20px 20px;
+    font-size: 17px;
+    border-radius: 30px;
+    box-shadow: 0px 5px 10px black;
+  }
+
+  #set {
+    width: 80px;
+    padding: 15px;
+    border-radius: 20px;
+    font-size: 17px;
+    box-shadow: 0px 5px 10px lightgrey;
+    color: black;
+
+  }
+
+  #message {
+    margin-top: 25%;
+    width: 50%;
+
+  }
+
+  #message-container {
+    width: 50%;
+
+
+  }
+
+  #chat_box {
+    padding: 20px;
+    width: 400px;
+    height: 350px;
+    margin-top: 10%;
+   
+    overflow-y: auto;
+    background: transparent;
+    color: green;
+  }
+
+  #chat_input {
+    float: left;
+    margin-left: 45%;
+    margin-top: 1%;
+    padding: 8px;
+  }
+
+  .user_message {
+    float: right;
+    background: yellow;
+    border: 2px solid black;
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+  .friend_message {
+    float: left;
+    background: pink;
+    border: 2px solid white;
+    padding: 5px;
+    border-radius: 5px;
+  }
+
+  #btn_send {
+    margin-top: 13px;
+  }
+  #onlineUser {
+      width: 400px;
+      background-color:transparent;
+      color:green;
+     
+     
+  }
+</style>
+
+<body>
+  <div id="error-container"></div>
+  <center>
+    <form id="inputName" action=""><br>
+      <div class="form-group">
+        <h1>What's your nickname?</h1>
+        <input class="form-control" id="username" placeholder=" nickname" autofocus='' required=""></input>
+      </div>
+      <div class="form-group">
+        <br><button id="set" type="button" name="button">
+          start
+        </button>
+      </div>
+    </form>
+  </center>
+
+  <center><form id="onlineUser" >
+    <h1>Online user</h1>
+    <button id="disconnect">disconnect</button>
+    <ul id= "onlineUser">
+    </ul>
+  </form></center>
+
+
+  <center><form id="chat_box" class="modal-content">
+    <center><h1>...Chat Area...</h1><hr></center>
+    <section>
+      <ul id="messages"></ul>
+      <div id="typing" style="color: black"></div>
+    </section>
+  </form></center>
+
+
+  <form id="chat_form">
+    <input id="chat_input" type="text" class="modal-content"><button id="btn_send"
+      class="btn btn-primary btn-sm">Send</button>
+  </form>
+
+ 
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+<script>
+
+  var socket = io();
+  var username = $("#username")
+  // function setUsername() {
+  //    socket.emit('setUsername', document.getElementById('username').value);
+  // };
+  var user;
+  var listOfUser = [];
+  $(document).ready(function () {
+    $("#chat_box").hide();
+    $("#chat_form").hide();
+    $("#chat_input").hide();
+    $("#btn_send").hide();
+    $("#onlineUser").hide();
+
+    $("#set").click(function () {
+      socket.emit('setUsername', { username: username.val() });
+      socket.emit('online', username.val());
+      $("#inputName").hide();
+      // console.log(username.val())
+      $("#chat_box").show();
+      $("#chat_input").show();
+      $("#btn_send").show();
+      $("#chat_form").show();
+      $("#onlineUser").show();
+      $("#disconnect").click(function () {
+        socket.emit('disconnect', username.val());
+        location.reload();
+      })
+    })
+    $('form').submit(function (e) {
+      e.preventDefault();
+      // socket.emit('chat message', { username: username.val(), message: $('#chat_input').val() });
+      socket.emit('chat message', { username: username.val(), message: $('#chat_input').val() });
+
+      $('#chat_input').val('');
+      return false;
+    });
+    socket.on('userExists', function (data) {
+      document.getElementById('error-container').innerHTML = data;
+    });
+    socket.on('userSet', function (data) {
+      user = data.username;
+    });
+    socket.on('chat message', function (msg) {
+      if (msg.username == username.val()) {
+        $("#messages").append("<div class='user_message'> Me: " + msg.message + "</div><br><br><br>")
+      } else {
+        $("#messages").append("<div class='friend_message'>" + msg.username + ": " + msg.message + "</div><br><br><br>")
+      }
+    });
+    socket.on('online', function (data) {
+      // console.log(data)
+      $(".Us").remove();
+      for (var i = 0; i < data.length; i++) {
+        if (!listOfUser.includes(data[i]) && username.val() != data[i]) {
+          var user = data[i]
+          // alert(user)
+          console.log(user)
+          $("#onlineUser").append("<li class='Us'>" + user + "</li>")
+        }
+
+      }
+
+    })
+    socket.on('newmsg', function (data) {
+      if (user) {
+        document.getElementById('message-container').innerHTML += '<div><b>' +
+          data.user + '</b>: ' + data.message + '</div>'
+      }
+
+    })
+
+    $("#chat_input").bind("keypress", function () {
+      socket.emit('typing');
+    })
+
+    socket.on('typing', function (msg, err) {
+      $('#typing').html(msg.username + " is typing a message...");
+      setTimeout(function () {
+        $("#typing").html('');
+      }, 3000);
+    })
+
+  })
+</script>
+
+</html>
